@@ -15,7 +15,8 @@ from dataset import (
 )
 from metrics import compute_metrics
 
-base_model = "bert-base-cased"
+base_model = "xlm-roberta-large"
+output_model = "x5-ner"
 
 tokenizer = AutoTokenizer.from_pretrained(base_model)
 model = AutoModelForTokenClassification.from_pretrained(
@@ -33,8 +34,8 @@ tokenized_datasets = tokenized_datasets["train"].train_test_split(
 )
 
 args = TrainingArguments(
-    "bert-finetuned-ner",
-    evaluation_strategy="epoch",
+    output_model,
+    # evaluation_strategy="epoch",
     save_strategy="epoch",
     learning_rate=2e-5,
     num_train_epochs=3,

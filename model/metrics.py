@@ -1,7 +1,7 @@
 import evaluate
 import numpy as np
 
-from model.dataset import LABEL_NAMES
+from dataset import LABEL_NAMES
 
 metric = evaluate.load("seqeval")
 

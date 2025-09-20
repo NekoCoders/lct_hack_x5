@@ -1,7 +1,7 @@
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 from transformers import pipeline
 
-model_id = "bert-finetuned-ner/checkpoint-9198"
+model_id = "x5-ner/checkpoint-9198"
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForTokenClassification.from_pretrained(model_id)
