@@ -16,7 +16,7 @@ from validation.csv_dataset_import import load_csv
 from validation.interface import BaseStatsPerEntity, SpanType
 
 
-def calculate_tp_fp_fn(pred_spans: list[SpanType], true_spans: list[SpanType]) -> tuple[int, int, int]:
+def calculate_tp_fp_fn(pred_spans: list[list[SpanType]], true_spans: list[list[SpanType]]) -> tuple[int, int, int]:
     tp: BaseStatsPerEntity = defaultdict(int) 
     fp: BaseStatsPerEntity = defaultdict(int)
     fn: BaseStatsPerEntity = defaultdict(int)

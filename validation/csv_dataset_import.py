@@ -3,7 +3,7 @@ import pandas as pd
 
 from validation.interface import SpanType
 
-def load_csv(path: str) -> tuple[list[str], list[SpanType]]:
+def load_csv(path: str) -> tuple[list[str], list[list[SpanType]]]:
     """
     Ожидается CSV, где:
       - 1-я колонка: текст
