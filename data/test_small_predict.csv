@@ -1,0 +1,4 @@
+sample;annotation
+abso;[(0, 4, 'B-BRAND')]
+abtoys игрушк;[(0, 6, 'B-BRAND'), (7, 13, 'B-TYPE')]
+редис белоручк;[(0, 5, 'B-TYPE'), (6, 14, 'B-BRAND')]
