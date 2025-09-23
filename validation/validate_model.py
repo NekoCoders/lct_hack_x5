@@ -144,12 +144,12 @@ def predict_spans_by_model(texts: list[str]) -> list[list[SpanType]]:
 
 
 if __name__ == "__main__":
-    DOCUMENTS_TO_PROCESS = 3000
-    TRUE_CSV = Path("data") / "submission.csv"
-    PREDICTED_CSV = Path("data") / "predicted.csv"
+    TRUE_CSV = Path("data") / "submission_orig.csv"
+    PREDICTED_CSV = Path("data") / "submission.csv"
     true_texts, true_spans = load_csv(TRUE_CSV)
-    true_texts = true_texts[1000:DOCUMENTS_TO_PROCESS]
-    true_spans = true_spans[1000:DOCUMENTS_TO_PROCESS]
+    # DOCUMENTS_TO_PROCESS = 3000
+    # true_texts = true_texts[1000:DOCUMENTS_TO_PROCESS]
+    # true_spans = true_spans[1000:DOCUMENTS_TO_PROCESS]
     pred_spans = predict_spans_by_model_bio(texts=true_texts)
 
     save_spans_csv(
