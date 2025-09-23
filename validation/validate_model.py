@@ -58,7 +58,7 @@ if __name__ == "__main__":
     DOCUMENTS_TO_PROCESS = 5000
     SHUFFLE_TEXTS = False
 
-    TRUE_CSV = Path("data") / "submission_example.csv"
+    TRUE_CSV = Path("data") / "submission_orig.csv"
     PREDICTED_CSV = Path("data") / "submission.csv"
     true_texts, true_spans = load_csv(TRUE_CSV)
     if SHUFFLE_TEXTS:

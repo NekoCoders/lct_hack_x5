@@ -26,7 +26,7 @@ def save_spans_csv(
     with open(path, "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f, delimiter=sep, quoting=csv.QUOTE_MINIMAL)
         if with_header:
-            writer.writerow(["text", "spans"] if texts is not None else ["spans"])
+            writer.writerow(["sample", "annotation"] if texts is not None else ["annotation"])
 
         for i, spans in enumerate(spans_per_row):
             spans_str = repr(spans)  # гарантирует формат [(0, 4, 'B-...'), ...]
