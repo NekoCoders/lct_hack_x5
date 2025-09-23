@@ -13,18 +13,19 @@ if PROJECT_ROOT not in sys.path:
 # -------------
 
 from validation.csv_dataset_import import load_csv
-from validation.interface import BaseStatsPerEntity, SpanType
+from model.interface import BaseStatsPerEntity, SpanType
 
 
-def calculate_tp_fp_fn(pred_spans: list[list[SpanType]], true_spans: list[list[SpanType]]) -> tuple[int, int, int]:
+def calculate_tp_fp_fn(pred_spans: list[list[SpanType]], true_spans: list[list[SpanType]], filter_out_empty_spans: True) -> tuple[int, int, int]:
     tp: BaseStatsPerEntity = defaultdict(int) 
     fp: BaseStatsPerEntity = defaultdict(int)
     fn: BaseStatsPerEntity = defaultdict(int)
 
     # цикл по текстам:
     for y_true_sequence, y_pred_sequence in zip(true_spans, pred_spans):
-        y_true_sequence = filter(lambda span: span[2] != "O", y_true_sequence)
-        y_pred_sequence = filter(lambda span: span[2] != "O", y_pred_sequence)
+        if filter_out_empty_spans:
+            y_true_sequence = filter(lambda span: span[2] != "O", y_true_sequence)
+            y_pred_sequence = filter(lambda span: span[2] != "O", y_pred_sequence)
         gold_entities = set(y_true_sequence)      # {(start, end, label), ...}
         predicted_entities = set(y_pred_sequence) # {(start, end, label), ...}
 

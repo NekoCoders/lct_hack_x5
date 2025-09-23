@@ -1,7 +1,7 @@
 import ast
 import pandas as pd
 
-from validation.interface import SpanType
+from model.interface import SpanType
 
 def load_csv(path: str) -> tuple[list[str], list[list[SpanType]]]:
     """

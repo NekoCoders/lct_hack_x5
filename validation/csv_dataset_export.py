@@ -1,6 +1,6 @@
 import csv
 from typing import Optional
-from validation.interface import SpanType
+from model.interface import SpanType
 
 
 def save_spans_csv(
