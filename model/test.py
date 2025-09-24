@@ -7,7 +7,7 @@ tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForTokenClassification.from_pretrained(model_id)
 
 nlp = pipeline("ner", model=model, tokenizer=tokenizer)
-example = "молоко домик в деревне"
+example = "сыр брест сливочный"
 
 ner_results = nlp(example)
 for span in ner_results:

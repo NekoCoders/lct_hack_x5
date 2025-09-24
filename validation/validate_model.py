@@ -81,10 +81,18 @@ if __name__ == "__main__":
 
     base_stats = calculate_tp_fp_fn(pred_spans=pred_spans, true_spans=true_spans, filter_out_empty_spans=False)
     macro_f1, full_stats = calculate_full_stats_from_base(*base_stats)
-    print_bio_diff_report(true_texts, true_spans, pred_spans, max_examples_per_type=50)
 
-    df_out = pd.DataFrame(full_stats, columns=["entity", "precision", "recall", "f1", "support"])
-    print("Precision - насколько правильные сущности мы нашли?")
-    print("Recall - какой % сущностей мы нашли?")
-    print("Support - количество сущностей в gold")
-    print(df_out.to_string(index=False))
+    REPORTS_DIR.mkdir(exist_ok=True)
+    now = datetime.now()
+    datetime_str = now.strftime("%Y-%m-%d_%H-%M")
+    with open(REPORTS_DIR / f"{datetime_str}_{TRUE_CSV.name}-{PREDICTED_CSV.name}.txt", "w", encoding="utf-8") as f:
+        import sys
+        sys.stdout = f
+
+        df_out = pd.DataFrame(full_stats, columns=["entity", "precision", "recall", "f1", "support"])
+        print("Precision - насколько правильные сущности мы нашли?")
+        print("Recall - какой % сущностей мы нашли?")
+        print("Support - количество сущностей в gold")
+        print(df_out.to_string(index=False))
+
+        print_bio_diff_report(true_texts, true_spans, pred_spans, max_examples_per_type=50)
