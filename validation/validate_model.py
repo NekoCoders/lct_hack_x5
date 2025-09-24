@@ -10,6 +10,7 @@ import sys
 import os
 from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
+from validation.make_difference_report import print_bio_diff_report
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
@@ -57,6 +58,7 @@ def predict_spans_by_model_bio(texts: list[str]) -> list[list[SpanType]]:
 if __name__ == "__main__":
     DOCUMENTS_TO_PROCESS = 300
     SHUFFLE_TEXTS = False
+    DIFF_EXAMPLES_NUMBER = 50
 
     TRUE_CSV = Path("data") / "submission_orig.csv"
     PREDICTED_CSV = Path("data") / "submission.csv"
@@ -79,7 +81,7 @@ if __name__ == "__main__":
 
     base_stats = calculate_tp_fp_fn(pred_spans=pred_spans, true_spans=true_spans, filter_out_empty_spans=False)
     macro_f1, full_stats = calculate_full_stats_from_base(*base_stats)
-    print_bio_diff_report(true_texts, true_spans, pred_spans, max_examples_per_type=20)
+    print_bio_diff_report(true_texts, true_spans, pred_spans, max_examples_per_type=50)
 
     df_out = pd.DataFrame(full_stats, columns=["entity", "precision", "recall", "f1", "support"])
     print("Precision - насколько правильные сущности мы нашли?")
