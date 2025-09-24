@@ -35,11 +35,12 @@ tokenized_datasets = tokenized_datasets["train"].train_test_split(
 
 args = TrainingArguments(
     output_model,
-    # evaluation_strategy="epoch",
+    eval_strategy="epoch",
     save_strategy="epoch",
     learning_rate=2e-5,
-    num_train_epochs=3,
+    num_train_epochs=10,
     weight_decay=0.01,
+    resume_from_checkpoint=output_model,
     push_to_hub=True,
 )
 
@@ -52,6 +53,6 @@ trainer = Trainer(
     compute_metrics=compute_metrics,
     processing_class=tokenizer,
 )
-trainer.train()
+trainer.train(resume_from_checkpoint=True)
 
 trainer.push_to_hub()
