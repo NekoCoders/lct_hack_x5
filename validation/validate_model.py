@@ -2,15 +2,13 @@
 from pathlib import Path
 from functools import lru_cache
 import random
-
+from tqdm import tqdm
+from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
 import pandas as pd
 
 # ------------ Добавляем в sys.path:
 import sys
 import os
-from tqdm import tqdm
-from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
-from validation.make_difference_report import print_bio_diff_report
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
@@ -18,6 +16,8 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
     print(PROJECT_ROOT)
 # -------------
+
+from validation.make_difference_report import print_bio_diff_report
 from validation.csv_dataset_export import save_spans_csv
 from validation.csv_dataset_import import load_csv
 from model.interface import SpanType
@@ -56,7 +56,7 @@ def predict_spans_by_model_bio(texts: list[str]) -> list[list[SpanType]]:
 
 
 if __name__ == "__main__":
-    DOCUMENTS_TO_PROCESS = 300
+    DOCUMENTS_TO_PROCESS = None
     SHUFFLE_TEXTS = False
     DIFF_EXAMPLES_NUMBER = 50
 
