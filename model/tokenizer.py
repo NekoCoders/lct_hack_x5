@@ -16,18 +16,16 @@ if PROJECT_ROOT not in sys.path:
 
 SpanType = Tuple[int, int, str]
 
-MODEL_ID = "lotusbro/x5-ner"
-
 @lru_cache(maxsize=1)
-def _get_tokenizer():
-    return AutoTokenizer.from_pretrained(MODEL_ID)
+def _get_tokenizer(model_id: str):
+    return AutoTokenizer.from_pretrained(model_id)
 
-def word_spans_by_tokenizer(text: str) -> List[Tuple[int, int]]:
+def word_spans_by_tokenizer(text: str, model_id: str) -> List[Tuple[int, int]]:
     """
     Возвращает список [(start_char, end_char)] для словных токенов,
     определённых препроцессором fast-токенайзера (с учётом пунктуации).
     """
-    tok = _get_tokenizer()
+    tok = _get_tokenizer(model_id=model_id)
     enc = tok(
         text,
         return_offsets_mapping=True,

@@ -23,31 +23,36 @@ LABEL2ID = {label: i for i, label in enumerate(LABEL_NAMES)}
 
 def _convert_sample(sample):
     text = sample["sample"]
-    annotation = ast.literal_eval(sample["annotation"])
+    annotation = ast.literal_eval(sample["annotation"])  # List[Tuple[int, int, str]]
 
     spans = []
     labels = []
+    offsets = []
     for start, end, label in annotation:
         span = text[start:end]
         spans.append(span)
         labels.append(label)
+        offsets.append((int(start), int(end)))
 
-    return {"spans": spans, "labels": labels}
+    return {"spans": spans, "labels": labels, "text": text, "offsets": offsets}
 
 
 def load_custom_dataset():
     dataset_path = str(Path(__file__).parent.parent / "data/train.csv")
     dataset = load_dataset("csv", data_files={"train": dataset_path}, delimiter=";")
+    features = Features(
+        {
+            "spans": Sequence(Value("string")),
+            "labels": Sequence(ClassLabel(names=LABEL_NAMES)),
+            "text": Value("string"),
+            "offsets": Sequence(Sequence(Value("int32"))),  # [[start, end], ...]
+        }
+    )
 
-    dataset = dataset.map(_convert_sample, remove_columns=["sample", "annotation"])
-
-    dataset = dataset.cast(
-        Features(
-            {
-                "spans": Sequence(Value("string")),
-                "labels": Sequence(ClassLabel(names=LABEL_NAMES)),
-            }
-        )
+    dataset = dataset.map(
+        _convert_sample,
+        remove_columns=["sample", "annotation"],
+        features=features,
     )
 
     return dataset

@@ -1,7 +1,3 @@
-from pathlib import Path
-
-import pandas as pd
-
 # ------------ Добавляем в sys.path:
 import sys
 import os
@@ -19,9 +15,9 @@ def _overlap(a_start: int, a_end: int, b_start: int, b_end: int) -> bool:
     # строгая проверка пересечения отрезков по символам
     return max(a_start, b_start) < min(a_end, b_end)
 
-def splitted_bio_spans_from_ents(text: str, ents: list[dict]) -> list[SpanType]:
+def splitted_bio_spans_from_ents(text: str, ents: list[dict], model_id: str) -> list[SpanType]:
     # Словные токены (по токенайзеру) с их символьными оффсетами
-    word_spans = word_spans_by_tokenizer(text)
+    word_spans = word_spans_by_tokenizer(text, model_id=model_id)
     bio_spans: list[SpanType] = []
     # Для каждой сущности – найдём покрытые словные токены
     for ent in ents:
