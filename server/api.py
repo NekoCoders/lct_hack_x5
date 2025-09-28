@@ -1,67 +1,38 @@
+import logging
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
-from typing import List, Dict, Optional
-import re
 
-from model_runner import infer_model
+# from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
+# ------------ Добавляем в sys.path:
+import sys
+import os
+
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+    print(PROJECT_ROOT)
+# -------------
+from server.inference_queue import InferenceQueue
+from server.interface import PredictionRequest, Entity
 
 app = FastAPI(title="NER Prediction API", version="1.0.0", debug=True)
+inq = InferenceQueue(maxsize=200, request_timeout_s=60.0)
 
 # Монтируем статические файлы (для CSS/JS если нужно)
 # app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# Модели данных
-class PredictionRequest(BaseModel):
-    input: str
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+)
+log = logging.getLogger("api")
 
-class Entity(BaseModel):
-    start_index: int
-    end_index: int
-    entity: str
 
-# Простая логика для демонстрации (замените на вашу реальную модель)
-def predict_entities(text: str) -> List[Entity]:
-    """
-    Простая демонстрационная логика распознавания сущностей
-    В реальном приложении здесь будет ваша ML модель
-    """
-
-    model_out = infer_model(text)
-    try:
-        entities = [Entity(start_index=ent["start"], end_index=ent["end"], entity=ent["entity"]) for ent in model_out]
-    except Exception as e:
-        print(e)
-
-    # entities = []
-    
-    # # Простые правила для демонстрации
-    # patterns = {
-    #     'B-TYPE': [r'\bсгущенное\b', r'\bсвежее\b', r'\bпастеризованное\b'],
-    #     'I-TYPE': [r'\bмолоко\b', r'\bмясо\b', r'\bмасло\b'],
-    #     'B-BRAND': [r'\bпростоквашино\b', r'\bдомик в деревне\b', r'\bчудо\b'],
-    # }
-    
-    # text_lower = text.lower()
-    
-    # for entity_type, regex_list in patterns.items():
-    #     for pattern in regex_list:
-    #         for match in re.finditer(pattern, text_lower):
-    #             entities.append(Entity(
-    #                 start_index=match.start(),
-    #                 end_index=match.end(),
-    #                 entity=entity_type
-    #             ))
-    
-    # Сортировка по начальному индексу
-    entities.sort(key=lambda x: x.start_index)
-    
-    return entities
-
-@app.post("/api/predict", response_model=List[Entity])
+@app.post("/api/predict", response_model=list[Entity])
 async def predict_entities_endpoint(request: PredictionRequest):
     """
     Предсказание именованных сущностей в тексте
@@ -69,17 +40,19 @@ async def predict_entities_endpoint(request: PredictionRequest):
     try:
         if not request.input or not request.input.strip():
             raise HTTPException(status_code=400, detail="Input text cannot be empty")
-        
+
         # Ограничение длины текста для безопасности
         if len(request.input) > 1000:
             raise HTTPException(status_code=400, detail="Input text too long")
-        
-        entities = predict_entities(request.input)
-        
-        return entities
-        
+
+        return await inq.submit(request.input)
+
+    except HTTPException:
+        # пробрасываем наши осмысленные ошибки дальше
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
+
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
@@ -196,9 +169,11 @@ async def root(request: Request):
     """
     return HTMLResponse(content=html_content)
 
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
 
 @app.get("/test")
 async def test_endpoint():
@@ -206,14 +181,29 @@ async def test_endpoint():
     Тестовый эндпоинт с примером работы
     """
     test_text = "Я купил свежее молоко Простоквашино"
-    entities = predict_entities(test_text)
-    
+    try:
+        predictions = await inq.submit(test_text)
+    except HTTPException:
+        # пробрасываем наши осмысленные ошибки дальше
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
+
     return {
         "test_text": test_text,
-        "predictions": entities,
-        "message": "Тестовый запрос выполнен успешно"
+        "predictions": predictions,
     }
+
+# lifespan — корректный запуск/остановка воркера
+@app.on_event("startup")
+async def _startup():
+    await inq.start()
+
+@app.on_event("shutdown")
+async def _shutdown():
+    await inq.stop()
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+    uvicorn.run(app, host="0.0.0.0", port=8000, workers=1)
