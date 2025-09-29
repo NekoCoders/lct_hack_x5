@@ -1,0 +1,11 @@
+services:
+  api:
+    build: .
+    image: neko-coders-hack-x5-app:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - TZ=Europe/Moscow
+    volumes:
+      - ./logs:/var/log/app
+    restart: unless-stopped
