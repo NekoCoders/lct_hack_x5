@@ -15,7 +15,8 @@ WORKDIR /app
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY server model /app/
+COPY server /app/server
+COPY model /app/model
 
 RUN chown -R app:app /app
 USER app
