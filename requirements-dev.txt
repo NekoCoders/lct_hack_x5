@@ -2,3 +2,4 @@ seqeval
 pandas
 tqdm
 datasets
+httpx

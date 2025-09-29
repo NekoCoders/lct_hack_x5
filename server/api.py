@@ -1,4 +1,5 @@
 import logging
+import time
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
@@ -15,6 +16,7 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
     print(PROJECT_ROOT)
 # -------------
+from server.configure_logger import configure_file_rotating_logger
 from server.inference_queue import InferenceQueue
 from server.interface import PredictionRequest, Entity
 
@@ -25,10 +27,7 @@ inq = InferenceQueue(maxsize=200, request_timeout_s=60.0)
 # app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
-)
+configure_file_rotating_logger()
 log = logging.getLogger("api")
 
 
@@ -38,14 +37,19 @@ async def predict_entities_endpoint(request: PredictionRequest):
     Предсказание именованных сущностей в тексте
     """
     try:
+        log.info(f"POST api/predict body='{request.model_dump_json()}'")
+        start_time = time.perf_counter()  # TODO: move to decorator
         if not request.input or not request.input.strip():
             raise HTTPException(status_code=400, detail="Input text cannot be empty")
 
         # Ограничение длины текста для безопасности
         if len(request.input) > 1000:
             raise HTTPException(status_code=400, detail="Input text too long")
+        response = await inq.submit(request.input)
 
-        return await inq.submit(request.input)
+        duration = time.perf_counter() - start_time
+        log.info(f"/api/predict executed in {duration:.3f}s")
+        return response
 
     except HTTPException:
         # пробрасываем наши осмысленные ошибки дальше
@@ -180,6 +184,7 @@ async def test_endpoint():
     """
     Тестовый эндпоинт с примером работы
     """
+    start_time = time.perf_counter()  # TODO: move to decorator
     test_text = "Я купил свежее молоко Простоквашино"
     try:
         predictions = await inq.submit(test_text)
@@ -188,7 +193,8 @@ async def test_endpoint():
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
-
+    duration = time.perf_counter() - start_time
+    log.info(f"/test executed in {duration:.3f}s")
     return {
         "test_text": test_text,
         "predictions": predictions,
