@@ -64,7 +64,7 @@ class InferenceQueue:
         Единственный воркер: вынимает задачи по одной и синхронно гоняет модель.
         Сам инференс — синхронный; выносим в executor, чтобы не блокировать event loop.
         """
-        load_model()  # прогреваем модель в воркере
+        load_model()  # прогреваем модель в воркере  # TODO: прогревать модель на FastAPI on-startup ?
         loop = asyncio.get_running_loop()
 
         while not self._stopping.is_set():

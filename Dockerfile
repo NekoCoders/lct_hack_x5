@@ -8,17 +8,22 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tzdata curl ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
-    && groupadd -r app && useradd -r -g app app
+    && groupadd -r app \
+    && useradd -m -d /home/app -r -g app app
 
 WORKDIR /app
 
-COPY requirements.txt /app/
+COPY . /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY server /app/server
-COPY model /app/model
+RUN chown -R app:app /app /home/app
+ENV HOME=/home/app \
+    HF_HOME=/home/app/.cache/huggingface \
+    TRANSFORMERS_CACHE=/home/app/.cache/transformers \
+    HUGGINGFACE_HUB_CACHE=/home/app/.cache/huggingface/hub
+RUN mkdir -p $HF_HOME $TRANSFORMERS_CACHE $HUGGINGFACE_HUB_CACHE && \
+    chown -R app:app /home/app/.cache
 
-RUN chown -R app:app /app
 USER app
 
 EXPOSE 8000
