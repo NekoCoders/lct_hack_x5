@@ -20,7 +20,7 @@ from server.configure_logger import configure_file_rotating_logger
 from server.inference_queue import InferenceQueue
 from server.interface import PredictionRequest, Entity
 
-app = FastAPI(title="NER Prediction API", version="1.0.0", debug=True)
+app = FastAPI(title="Neko Coders NER Prediction API", version="1.0.0", debug=True)
 inq = InferenceQueue(maxsize=200, request_timeout_s=60.0)
 
 # Монтируем статические файлы (для CSS/JS если нужно)
