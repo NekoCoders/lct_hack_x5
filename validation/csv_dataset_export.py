@@ -1,5 +1,6 @@
 import csv
 from typing import Optional
+
 from model.interface import SpanType
 
 
