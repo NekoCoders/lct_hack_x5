@@ -83,42 +83,12 @@ class InferenceQueue:
                         break
             if len(jobs) > 1:
                 log.info("%d requests will be processed in batch", len(jobs))
-            # подготавливаем общий текст и смещения сегментов
             texts = [j["text"] for j in jobs]
-            joiner = self.joiner
-            # стартовые индексы каждого сегмента в общий_текст
-            segment_starts = []
-            offset = 0
-            for t in texts:
-                segment_starts.append(offset)
-                offset += len(t) + len(joiner)
-            # общий текст: последний joiner можно оставить — мы просто будем
-            # отфильтровывать сущности по границам сегмента
-            combined_text = joiner.join(texts)
 
             try:
-                # один прогон синхронной модели в ThreadPool
-                raw_entities = await loop.run_in_executor(None, infer_model, combined_text)
-
-                # раскладываем сущности обратно по задачам
-                results_per_job: list[list[Entity]] = [[] for _ in jobs]
-                for seg_idx, (seg_start) in enumerate(segment_starts):
-                    # границы сегмента в общем тексте
-                    seg_end = seg_start + len(texts[seg_idx])
-
-                    # берём только те сущности, которые лежат ПОЛНОСТЬЮ внутри сегмента
-                    seg_entities = []
-                    for start, end, label in raw_entities:
-                        if start >= seg_start and end <= seg_end:
-                            # корректируем смещение к локальному тексту
-                            local_start = start - seg_start
-                            local_end = end - seg_start
-                            seg_entities.append(
-                                Entity(start_index=local_start, end_index=local_end, entity=label)
-                            )
-                    results_per_job[seg_idx] = seg_entities
-
-                # отдаём результаты во fiture
+                # один прогон синхронной модели в ThreadPool. Порядок текстов сохраняется
+                results_per_job = await loop.run_in_executor(None, infer_model, texts)
+                # отдаём результаты во future
                 for (job, ents) in zip(jobs, results_per_job):
                     fut: asyncio.Future = job["future"]
                     if not fut.done():

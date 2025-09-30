@@ -31,14 +31,17 @@ def load_model():  # FIXME: must be in module "model"?
     return pipe
 
 
-def infer_model(text) -> list[SpanType]:  # FIXME: must be in module "model"?
+def infer_model(texts: list[str]) -> list[SpanType]:  # FIXME: must be in module "model"?
     global pipe
     if "pipe" not in globals():
         pipe = load_model()
 
-    result_ents = pipe(text)
-    result_spans = splitted_bio_spans_from_ents(text=text, ents=result_ents, model_id=MODEL_ID)
-    return result_spans
+    result_ents_for_texts = pipe(texts)
+    result_spans_for_texts = []
+    for i, result_ents in enumerate(result_ents_for_texts):
+        result_spans_for_text = splitted_bio_spans_from_ents(text=texts[i], ents=result_ents, model_id=MODEL_ID)
+        result_spans_for_texts.append(result_spans_for_text)
+    return result_spans_for_texts
 
 
 if __name__ == "__main__":

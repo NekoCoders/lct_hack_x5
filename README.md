@@ -11,5 +11,7 @@ python server/api.py
 ```
 ### Запуск через docker
 ```
+mkdir logs
+sudo chmod -R 777 logs
 docker compose up
 ```
