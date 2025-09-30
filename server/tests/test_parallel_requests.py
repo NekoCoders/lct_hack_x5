@@ -7,7 +7,8 @@ async def go(i):
     async with httpx.AsyncClient() as c:
         r = await c.post(
             URL,
-            json={"input": f"молоко домик в деревне очень вкусное"}
+            json={"input": f"молоко домик в деревне очень вкусное"},
+            timeout=60,
         )
         return r.json()
 

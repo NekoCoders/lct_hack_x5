@@ -14,9 +14,9 @@ CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
-    print(PROJECT_ROOT)
 # -------------
 from server.configure_logger import configure_file_rotating_logger
+configure_file_rotating_logger()  # For logging long imports
 from server.inference_queue import InferenceQueue
 from server.interface import PredictionRequest, Entity
 
@@ -27,7 +27,6 @@ inq = InferenceQueue(maxsize=200, request_timeout_s=60.0)
 # app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-configure_file_rotating_logger()
 log = logging.getLogger("api")
 
 
