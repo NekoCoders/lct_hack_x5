@@ -15,8 +15,8 @@ WORKDIR /app
 
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
-COPY model /app/
-COPY server /app/
+COPY model /app/model
+COPY server /app/server
 
 RUN chown -R app:app /app /home/app
 ENV HOME=/home/app \

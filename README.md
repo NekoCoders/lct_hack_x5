@@ -9,3 +9,7 @@
 pip install -r requirements.txt
 python server/api.py
 ```
+### Запуск через docker
+```
+docker compose up
+```

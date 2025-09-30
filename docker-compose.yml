@@ -9,5 +9,5 @@ services:
     environment:
       - TZ=Europe/Moscow
     volumes:
-      - ./logs:/var/log/app
+      - ./logs:/app/server/logs
     restart: unless-stopped
