@@ -16,7 +16,7 @@ class InferenceQueue:
         maxsize: int = 100,
         request_timeout_s: float = 60.0,  # TODO: improve timeout and move to config?
         batch_size: int = 1,  # TURN OFF
-        batch_wait_ms: int = 20,  # окно добора задач в батч, миллисекунды
+        batch_wait_ms: int = 1,  # окно добора задач в батч, миллисекунды
         joiner: str = ". ",
     ):
         self.queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=maxsize)
