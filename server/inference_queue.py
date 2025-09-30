@@ -76,7 +76,6 @@ class InferenceQueue:
                     try:
                         # чуть-чуть ждём вторую/третью задачу в рамках окна
                         timeout_left = max(0.0, end_time - loop.time())
-                        log.info("Wait asyncio: %s", str(timeout_left))
                         job = await asyncio.wait_for(self.queue.get(), timeout=timeout_left)
                         jobs.append(job)
                         self._log_qsize_if_changed()
