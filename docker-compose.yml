@@ -2,6 +2,8 @@ services:
   api:
     build: .
     image: neko-coders-hack-x5-app:latest
+    container_name: neko-coders-hack-x5-app
+    runtime: nvidia       # важно для использования GPU
     ports:
       - "8000:8000"
     environment:
