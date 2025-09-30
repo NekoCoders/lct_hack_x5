@@ -42,10 +42,9 @@ def infer_model(texts: list[str]) -> list[list[Entity]]:  # FIXME: must be in mo
     response_entities_for_texts = []
     for i, result_ents in enumerate(result_ents_for_texts):
         result_spans_for_text = splitted_bio_spans_from_ents(text=texts[i], ents=result_ents, model_id=MODEL_ID)
-        response_entities = [
-                                Entity(start_index=start, end_index=end, entity=label)
+        response_entities = [Entity(start_index=start, end_index=end, entity=label)
                              for start, end, label in result_spans_for_text]
-        response_entities_for_texts.append(result_spans_for_text)
+        response_entities_for_texts.append(response_entities)
     return response_entities_for_texts
 
 
