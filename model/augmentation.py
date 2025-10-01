@@ -148,7 +148,7 @@ def make_typos(
 
 if __name__ == "__main__":
     s = "Привет! Это тестовая строка с русскими буквами: ёж, ЙЦУКЕН, ящерица."
-    result_str = make_typos(s, prob=0.05, seed=44, typo_probs=MOBILE_NO_AUTOCORR["typo_probs"])
+    result_str = make_typos(s, prob=0.1, seed=44, typo_probs=MOBILE_NO_AUTOCORR["typo_probs"])
     print(result_str)
     
     DATASETS_FOLDER = Path(__file__).resolve().parents[1] / "data"
@@ -162,11 +162,12 @@ if __name__ == "__main__":
         for dataset in SRC_DATASETS:
             texts, spans = load_csv(dataset)
             for num, text in enumerate(texts):
-                text = make_typos(text, prob=0.05, seed=i, typo_probs=MOBILE_NO_AUTOCORR["typo_probs"])
+                text = make_typos(text, prob=0.1, seed=i, typo_probs=MOBILE_NO_AUTOCORR["typo_probs"])
                 result_texts.append(text)
                 result_spans.append(spans[num])
     save_spans_csv(
         spans_per_row=result_spans,
         path=RESULT_DATASET,
         texts=result_texts,
-        with_header=True)
+        with_header=True
+    )
