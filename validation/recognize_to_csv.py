@@ -18,7 +18,7 @@ from validation.validate_model import predict_spans_by_model_bio
 
 
 if __name__ == "__main__":
-    MODEL = "lotusbro/x5-ner"
+    MODEL = "nekocoders/x5-ner-final"
     TRUE_CSV = Path("data") / "submission_orig.csv"
     true_dataset = TRUE_CSV.name
     true_texts, true_spans = load_csv(TRUE_CSV)

@@ -15,9 +15,8 @@ class InferenceQueue:
         self,
         maxsize: int = 100,
         request_timeout_s: float = 5.0,  # TODO: improve timeout and move to config?
-        batch_size: int = 20,
+        batch_size: int = 50,
         batch_wait_ms: int = 20,  # окно добора задач в батч, миллисекунды
-        joiner: str = ". ",
     ):
         self.queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=maxsize)
         self.request_timeout_s = request_timeout_s
@@ -26,7 +25,6 @@ class InferenceQueue:
         self._stopping = asyncio.Event()
         self.batch_size = batch_size
         self.batch_wait_ms = batch_wait_ms
-        self.joiner = joiner
 
     async def submit(self, text: str) -> list[Entity]:
         """

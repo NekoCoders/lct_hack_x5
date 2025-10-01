@@ -1,7 +1,7 @@
 from transformers import AutoTokenizer, AutoModelForTokenClassification
 from transformers import pipeline
 
-model_id = "lotusbro/x5-ner"
+model_id = "nekocoders/x5-ner-final"
 
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 model = AutoModelForTokenClassification.from_pretrained(model_id)
