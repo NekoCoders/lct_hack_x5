@@ -7,7 +7,7 @@ def load_csv(path: str) -> tuple[list[str], list[list[SpanType]]]:
     """
     Ожидается CSV, где:
       - 1-я колонка: текст
-      - 2-я колонка: строка списком кортежей [(start, end, 'B-XXX'), ...]
+      - 2-я колонка: список списков кортежей [(start, end, 'B-XXX'), ...] - для каждого предложения список spans
     """
     df = pd.read_csv(path, header=0, sep=";")
     texts = df.iloc[:, 0].astype(str).tolist()
