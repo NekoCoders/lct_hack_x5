@@ -5,9 +5,10 @@ import time
 log = logging.getLogger("model_runner")
 
 log.info("Start of loading transformers library")
-from transformers import AutoTokenizer, AutoModelForTokenClassification
+from transformers import AutoTokenizer
 from transformers import pipeline
 log.info("End of loading transformers library")
+from optimum.onnxruntime import ORTModelForTokenClassification
 # ------------ Добавляем в sys.path:
 import sys
 import os
@@ -17,7 +18,6 @@ PROJECT_ROOT = os.path.abspath(os.path.join(CURRENT_DIR, ".."))
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 # -------------
-from model.interface import SpanType
 from server.interface import Entity
 from model.postprocessing import splitted_bio_spans_from_ents
 
@@ -29,7 +29,7 @@ log = logging.getLogger(__file__)
 def load_model():  # FIXME: must be in module "model"?
     log.info("Start model loading")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_ID)
-    model = AutoModelForTokenClassification.from_pretrained(MODEL_ID)
+    model = ORTModelForTokenClassification.from_pretrained(MODEL_ID, provider="CUDAExecutionProvider")
 
     pipe = pipeline("ner", model=model, tokenizer=tokenizer, aggregation_strategy="simple")
     log.info("Model loaded")
