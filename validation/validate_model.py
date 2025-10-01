@@ -76,7 +76,7 @@ if __name__ == "__main__":
     DOCUMENTS_TO_PROCESS = None
     DIFF_EXAMPLES_NUMBER = 50
     USE_TRAIN_TEXTS = True
-    MODEL_IDS_ORDERED = ["lotusbro/x5-ner", "lotusbro/x5-ner-ru"]
+    MODEL_IDS_ORDERED = ["lotusbro/x5-ner", "lotusbro/x5-ner-ru", "lotusbro/x5-ner-weighted", "dreyk111/x5-ner-add-brands"]
     MODEL = MODEL_IDS_ORDERED[0]
 
     if USE_TRAIN_TEXTS:
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     true_texts = true_texts[:DOCUMENTS_TO_PROCESS]
     true_spans = true_spans[:DOCUMENTS_TO_PROCESS]
 
-    PREDICTED_CSV = Path("data") / "submission.csv"
+    PREDICTED_CSV = Path("data") / f"submission-{MODEL.replace('/', '-')}.csv"
     pred_spans = predict_spans_by_model_bio(texts=true_texts, model_id=MODEL)
 
     save_spans_csv(

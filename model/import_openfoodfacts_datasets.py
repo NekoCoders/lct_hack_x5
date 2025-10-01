@@ -30,13 +30,15 @@ with open(DST_RAW_DATASET, "w", encoding="utf-8") as f:
 with open(DST_RAW_DATASET, "r", encoding="utf-8") as f:
     reader = csv.reader(f)
     brands = []
-    for row in filter(lambda i: i, reader):
+    for row in reader:
         brands.extend(row)
+    brands = filter(lambda i: i is not None and i != "None", brands)
+    brands = list(set(brands))
 
 
 spans_per_row = []
 for brand_text in brands:
-    words = brand_text.split(" ")
+    words = filter(lambda i: i, brand_text.split(" "))
     spans_of_text = []
     last_word_end = 0
     for i, word in enumerate(words):

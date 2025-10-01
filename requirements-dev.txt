@@ -4,3 +4,4 @@ tqdm
 datasets
 httpx
 evaluate
+transformers[torch]

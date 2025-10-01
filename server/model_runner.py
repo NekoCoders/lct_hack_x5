@@ -1,5 +1,6 @@
 
 import logging
+import time
 
 log = logging.getLogger("model_runner")
 
@@ -20,7 +21,9 @@ from model.interface import SpanType
 from server.interface import Entity
 from model.postprocessing import splitted_bio_spans_from_ents
 
-MODEL_ID = "lotusbro/x5-ner"
+MODEL_ID = "dreyk111/x5-ner-add-brands"  # lotusbro/x5-ner-weighted
+
+log = logging.getLogger(__file__)
 
 
 def load_model():  # FIXME: must be in module "model"?
@@ -37,6 +40,7 @@ def infer_model(texts: list[str]) -> list[list[Entity]]:  # FIXME: must be in mo
     global pipe
     if "pipe" not in globals():
         pipe = load_model()
+    start_time = time.perf_counter()  # TODO: move to decorator
 
     result_ents_for_texts = pipe(texts)
     response_entities_for_texts = []
@@ -45,6 +49,9 @@ def infer_model(texts: list[str]) -> list[list[Entity]]:  # FIXME: must be in mo
         response_entities = [Entity(start_index=start, end_index=end, entity=label)
                              for start, end, label in result_spans_for_text]
         response_entities_for_texts.append(response_entities)
+
+    duration = time.perf_counter() - start_time
+    log.info("infer_model executed in '%.3f s', number of texts: '%d'", duration, len(texts))
     return response_entities_for_texts
 
 

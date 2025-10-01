@@ -39,7 +39,11 @@ def _convert_sample(sample):
 
 def load_custom_dataset():
     dataset_path = str(Path(__file__).parent.parent / "data/train.csv")
-    dataset = load_dataset("csv", data_files={"train": dataset_path}, delimiter=";")
+    dataset_path_2 = str(Path(__file__).parent.parent / "data/train_brands.csv")
+    dataset = load_dataset(
+        "csv", data_files={"train": [dataset_path, dataset_path_2]}, delimiter=";"
+    )
+    # dataset = load_dataset("csv", data_files={"train": dataset_path}, delimiter=";")
     features = Features(
         {
             "spans": Sequence(Value("string")),

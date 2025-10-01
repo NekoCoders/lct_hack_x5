@@ -12,3 +12,4 @@ venv
 data
 server/tests
 validation
+model/x5-ner-add-brands

@@ -14,9 +14,9 @@ class InferenceQueue:
     def __init__(
         self,
         maxsize: int = 100,
-        request_timeout_s: float = 60.0,  # TODO: improve timeout and move to config?
-        batch_size: int = 1,  # TURN OFF
-        batch_wait_ms: int = 1,  # окно добора задач в батч, миллисекунды
+        request_timeout_s: float = 5.0,  # TODO: improve timeout and move to config?
+        batch_size: int = 20,
+        batch_wait_ms: int = 20,  # окно добора задач в батч, миллисекунды
         joiner: str = ". ",
     ):
         self.queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=maxsize)
@@ -70,6 +70,13 @@ class InferenceQueue:
             # пытаемся добрать ещё задачи в батч
             jobs = [first_job]
             if self.batch_size > 1:
+                remaining_batch_slots = self.batch_size - 1
+                # Набор оставшихся задач из очереди без таймаута
+                while len(jobs) < self.batch_size and not self.queue.empty():
+                    next_job = self.queue.get_nowait()
+                    jobs.append(next_job)
+                    self._log_qsize_if_changed()
+
                 end_time = loop.time() + (self.batch_wait_ms / 1000.0)
                 # пока есть время окна и не заполнен батч — добираем без блокировки
                 while len(jobs) < self.batch_size and loop.time() < end_time:
