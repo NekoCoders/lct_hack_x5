@@ -21,7 +21,7 @@ from model.interface import SpanType
 from server.interface import Entity
 from model.postprocessing import splitted_bio_spans_from_ents
 
-MODEL_ID = "dreyk111/x5-ner-add-brands"  # lotusbro/x5-ner-weighted
+MODEL_ID = "nekocoders/x5-ner-final"
 
 log = logging.getLogger(__file__)
 
