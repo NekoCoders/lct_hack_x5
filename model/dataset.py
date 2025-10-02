@@ -38,10 +38,12 @@ def _convert_sample(sample):
 
 
 def load_custom_dataset():
-    dataset_path = str(Path(__file__).parent.parent / "data/train.csv")
-    dataset_path_2 = str(Path(__file__).parent.parent / "data/train_brands.csv")
+    dataset_paths = []
+    dataset_paths.append(str(Path(__file__).parent.parent / "data/train.csv"))
+    dataset_paths.append(str(Path(__file__).parent.parent / "data/train_brands.csv"))
+    dataset_paths.append(str(Path(__file__).parent.parent / "data/train_augmentated_all.csv"))
     dataset = load_dataset(
-        "csv", data_files={"train": [dataset_path, dataset_path_2]}, delimiter=";"
+        "csv", data_files={"train": dataset_paths}, delimiter=";"
     )
     # dataset = load_dataset("csv", data_files={"train": dataset_path}, delimiter=";")
     features = Features(
