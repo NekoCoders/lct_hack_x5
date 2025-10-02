@@ -13,6 +13,7 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 # -------------
 
+from model.dataset import align_labels_with_tokens
 from validation.csv_dataset_export import save_spans_csv
 from validation.csv_dataset_import import load_csv
 
@@ -148,6 +149,50 @@ def make_typos(
 
 
 default_make_typos = partial(make_typos, prob=0.1, typo_probs=MOBILE_NO_AUTOCORR["typo_probs"])
+
+
+def make_transform_augments(tokenizer, apply_typos: bool):
+    """
+    Возвращает ф-ю, которую Datasets вызовет на КАЖДОМ батче
+    прямо на лету при формировании даталоадера.
+    """
+    def _transform(batch):
+        # batch["spans"] — List[List[str]], batch["labels"] — List[List[int]]
+        words_batch  = batch["spans"]
+        labels_batch = batch["labels"]
+
+        input_ids_batch      = []
+        attention_mask_batch = []
+        label_ids_batch      = []
+
+        for words, labels in zip(words_batch, labels_batch):
+            # На train добавляем случайные опечатки
+            if apply_typos:
+                words = [default_make_typos(w) for w in words]
+
+            # Токенизация списка слов одного примера
+            tok = tokenizer(
+                [words],                       # <-- батч из одного примера
+                is_split_into_words=True,
+                truncation=True,
+            )
+            # Берём нулевой элемент из батча
+            input_ids      = tok["input_ids"][0]
+            attention_mask = tok["attention_mask"][0]
+            word_ids       = tok.word_ids(batch_index=0)
+
+            aligned = align_labels_with_tokens(labels, word_ids)
+
+            input_ids_batch.append(input_ids)
+            attention_mask_batch.append(attention_mask)
+            label_ids_batch.append(aligned)
+
+        return {
+            "input_ids": input_ids_batch,
+            "attention_mask": attention_mask_batch,
+            "labels": label_ids_batch,
+        }
+    return _transform
 
 
 if __name__ == "__main__":
