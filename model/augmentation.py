@@ -1,3 +1,4 @@
+from functools import partial
 from pathlib import Path
 import random
 import re
@@ -146,9 +147,12 @@ def make_typos(
     return "".join(out)
 
 
+default_make_typos = partial(make_typos, prob=0.1, typo_probs=MOBILE_NO_AUTOCORR["typo_probs"])
+
+
 if __name__ == "__main__":
     s = "Привет! Это тестовая строка с русскими буквами: ёж, ЙЦУКЕН, ящерица."
-    result_str = make_typos(s, prob=0.1, seed=44, typo_probs=MOBILE_NO_AUTOCORR["typo_probs"])
+    result_str = default_make_typos(s)
     print(result_str)
     
     DATASETS_FOLDER = Path(__file__).resolve().parents[1] / "data"

@@ -2,7 +2,7 @@ import ast
 from pathlib import Path
 from torch.utils.data.dataset import Dataset
 
-from datasets import load_dataset, Features, Sequence, Value, ClassLabel
+from datasets import load_dataset, Features, Sequence, Value, ClassLabel, concatenate_datasets, DatasetDict
 
 
 LABEL_NAMES = [
@@ -37,15 +37,9 @@ def _convert_sample(sample):
     return {"spans": spans, "labels": labels, "text": text, "offsets": offsets}
 
 
-def load_custom_dataset():
-    dataset_paths = []
-    dataset_paths.append(str(Path(__file__).parent.parent / "data/train.csv"))
-    dataset_paths.append(str(Path(__file__).parent.parent / "data/train_brands.csv"))
-    dataset_paths.append(str(Path(__file__).parent.parent / "data/train_augmentated_all.csv"))
-    dataset = load_dataset(
-        "csv", data_files={"train": dataset_paths}, delimiter=";"
-    )
-    # dataset = load_dataset("csv", data_files={"train": dataset_path}, delimiter=";")
+def load_custom_dataset(data_filename: str):
+    file_path = str(Path(__file__).parent.parent / "data" / data_filename)
+    dataset = load_dataset("csv", data_files={"train": file_path}, delimiter=";")
     features = Features(
         {
             "spans": Sequence(Value("string")),
@@ -62,6 +56,21 @@ def load_custom_dataset():
     )
 
     return dataset
+
+
+def load_raw_datasets():
+    dataset_main_train = load_custom_dataset("train.csv")
+    dataset_brands = load_custom_dataset("train_brands.csv")
+    # делим только основной train.csv
+    split_main = dataset_main_train["train"].train_test_split(test_size=0.1, seed=42)
+    # объединяем brands с train-частью
+    full_train = concatenate_datasets([split_main["train"], dataset_brands["train"]])
+
+    raw_datasets = DatasetDict({
+        "train": full_train,
+        "test": split_main["test"]
+    })
+    return raw_datasets
 
 
 def align_labels_with_tokens(labels, word_ids):
