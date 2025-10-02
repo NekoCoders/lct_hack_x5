@@ -27,34 +27,53 @@ model = AutoModelForTokenClassification.from_pretrained(
 )
 
 raw_datasets = load_raw_datasets()
-tokenized_datasets = tokenize_datasets(raw_datasets, tokenizer)
 
 def make_transform(apply_typos: bool):
     """
     Возвращает функцию, которую Datasets вызовет на КАЖДОЙ выборке,
     уже во время обучения/валидации.
     """
-    def _transform(example):
-        words = example["spans"]           # список "слов" (токенов по словам)
-        labels = example["labels"]         # BIO-метки на уровне слов
+def make_transform(apply_typos: bool):
+    """
+    Возвращает ф-ю, которую Datasets вызовет на КАЖДОМ батче
+    прямо на лету при формировании даталоадера.
+    """
+    def _transform(batch):
+        # batch["spans"] — List[List[str]], batch["labels"] — List[List[int]]
+        words_batch  = batch["spans"]
+        labels_batch = batch["labels"]
 
-        # На train добавляем случайные опечатки внутрь слов.
-        if apply_typos:
-            # Применяем по словам, чтобы не склеивать их
-            words = [default_make_typos(w) for w in words]
+        input_ids_batch      = []
+        attention_mask_batch = []
+        label_ids_batch      = []
 
-        # Токенизируем "список слов"
-        tokenized = tokenizer(
-            words,
-            is_split_into_words=True,
-            truncation=True,
-        )
+        for words, labels in zip(words_batch, labels_batch):
+            # На train добавляем случайные опечатки
+            if apply_typos:
+                words = [default_make_typos(w) for w in words]
 
-        # Выравниваем метки по субтокенам
-        word_ids = tokenized.word_ids()
-        tokenized["labels"] = align_labels_with_tokens(labels, word_ids)
+            # Токенизация списка слов одного примера
+            tok = tokenizer(
+                [words],                       # <-- батч из одного примера
+                is_split_into_words=True,
+                truncation=True,
+            )
+            # Берём нулевой элемент из батча
+            input_ids      = tok["input_ids"][0]
+            attention_mask = tok["attention_mask"][0]
+            word_ids       = tok.word_ids(batch_index=0)
 
-        return tokenized
+            aligned = align_labels_with_tokens(labels, word_ids)
+
+            input_ids_batch.append(input_ids)
+            attention_mask_batch.append(attention_mask)
+            label_ids_batch.append(aligned)
+
+        return {
+            "input_ids": input_ids_batch,
+            "attention_mask": attention_mask_batch,
+            "labels": label_ids_batch,
+        }
     return _transform
 
 train_dataset = raw_datasets["train"].with_transform(make_transform(apply_typos=True))
@@ -70,6 +89,7 @@ args = TrainingArguments(
     resume_from_checkpoint=output_model,
     load_best_model_at_end=True,
     push_to_hub=True,
+    remove_unused_columns=False,  # чтобы не выкидывало 'spans' до трансформа
 )
 
 trainer = Trainer(
