@@ -16,7 +16,7 @@ def compute_metrics(eval_preds):
         [LABEL_NAMES[p] for (p, l) in zip(prediction, label) if l != -100]
         for prediction, label in zip(predictions, labels)
     ]
-    all_metrics = metric.compute(predictions=true_predictions, references=true_labels)
+    all_metrics = metric.compute(predictions=true_predictions, references=true_labels, zero_division=0)
     return {
         "precision": all_metrics["overall_precision"],
         "recall": all_metrics["overall_recall"],
