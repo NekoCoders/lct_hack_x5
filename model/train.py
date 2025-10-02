@@ -1,10 +1,14 @@
+from torch import nn
+import torch
 from transformers import (
     AutoTokenizer,
     DataCollatorForTokenClassification,
     AutoModelForTokenClassification,
     Trainer,
     TrainingArguments,
+    XLMRobertaForTokenClassification
 )
+from transformers.trainer_callback import EarlyStoppingCallback
 
 from dataset import (
     ID2LABEL,
@@ -19,11 +23,20 @@ base_model = "xlm-roberta-large"
 output_model = "x5-ner"
 
 tokenizer = AutoTokenizer.from_pretrained(base_model)
-model = AutoModelForTokenClassification.from_pretrained(
+model: XLMRobertaForTokenClassification = AutoModelForTokenClassification.from_pretrained(
     base_model,
     id2label=ID2LABEL,
     label2id=LABEL2ID,
 )
+
+# print(model)
+model.dropout = torch.nn.Dropout(0.2, inplace=False)
+freeze_modules = []
+freeze_modules += [model.roberta.embeddings]
+# freeze_modules += model.roberta.encoder.layer[:-12]
+for module in freeze_modules:
+    for param in module.parameters(): 
+        param.requires_grad = False
 
 raw_datasets = load_custom_dataset()
 
@@ -33,26 +46,38 @@ tokenized_datasets = tokenized_datasets["train"].train_test_split(
     test_size=0.1, seed=42
 )
 
-args = TrainingArguments(
+training_args = TrainingArguments(
     output_model,
-    eval_strategy="epoch",
-    save_strategy="epoch",
+    eval_strategy="steps",
+    eval_steps=500,
+    save_steps=500,
+    save_total_limit=3,
+    load_best_model_at_end=True,
+    metric_for_best_model="eval_loss",
+    greater_is_better=False,
+    per_device_train_batch_size=8,
+    per_device_eval_batch_size=16,
+    num_train_epochs=3,
     learning_rate=2e-5,
-    num_train_epochs=10,
     weight_decay=0.01,
-    resume_from_checkpoint=output_model,
-    push_to_hub=True,
+    warmup_ratio=0.06,
+    max_grad_norm=1.0,
+    gradient_accumulation_steps=2,
+    dataloader_drop_last=False,
+    gradient_checkpointing=False,
 )
 
 trainer = Trainer(
     model=model,
-    args=args,
+    args=training_args,
     train_dataset=tokenized_datasets["train"],
     eval_dataset=tokenized_datasets["test"],
     data_collator=DataCollatorForTokenClassification(tokenizer=tokenizer),
-    compute_metrics=compute_metrics,
     processing_class=tokenizer,
+    compute_metrics=compute_metrics,
+    callbacks=[EarlyStoppingCallback(early_stopping_patience=3)]
 )
-trainer.train(resume_from_checkpoint=True)
+
+trainer.train()
 
 trainer.push_to_hub()
