@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+RUN pip install -q torch
 COPY requirements.txt /app/
 RUN pip install -r requirements.txt
 COPY model /app/model

@@ -5,7 +5,7 @@ from typing import Any
 from fastapi import HTTPException
 
 from server.interface import Entity
-from server.model_runner import infer_model, load_model
+from server.model_runner import NERPipeline
 
 log = logging.getLogger(__name__)
 
@@ -15,8 +15,7 @@ class InferenceQueue:
         self,
         maxsize: int = 100,
         request_timeout_s: float = 5.0,  # TODO: improve timeout and move to config?
-        batch_size: int = 50,
-        batch_wait_ms: int = 20,  # окно добора задач в батч, миллисекунды
+        batch_size: int = 16,
     ):
         self.queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=maxsize)
         self.request_timeout_s = request_timeout_s
@@ -24,7 +23,6 @@ class InferenceQueue:
         self._last_qsize = 0
         self._stopping = asyncio.Event()
         self.batch_size = batch_size
-        self.batch_wait_ms = batch_wait_ms
 
     async def submit(self, text: str) -> list[Entity]:
         """
@@ -54,7 +52,7 @@ class InferenceQueue:
         Один воркер, но с микробатчингом: за короткое окно добираем до batch_size задач,
         склеиваем тексты через joiner и делаем один прогон модели.
         """
-        load_model()  # прогреваем модель внутри воркера
+        pipe = NERPipeline()  # прогреваем модель внутри воркера
         loop = asyncio.get_running_loop()
 
         while not self._stopping.is_set():
@@ -67,32 +65,19 @@ class InferenceQueue:
 
             # пытаемся добрать ещё задачи в батч
             jobs = [first_job]
-            if self.batch_size > 1:
-                remaining_batch_slots = self.batch_size - 1
-                # Набор оставшихся задач из очереди без таймаута
-                while len(jobs) < self.batch_size and not self.queue.empty():
-                    next_job = self.queue.get_nowait()
-                    jobs.append(next_job)
-                    self._log_qsize_if_changed()
+            # Набор оставшихся задач из очереди без таймаута
+            while len(jobs) < self.batch_size and not self.queue.empty():
+                next_job = self.queue.get_nowait()
+                jobs.append(next_job)
+                self._log_qsize_if_changed()
 
-                end_time = loop.time() + (self.batch_wait_ms / 1000.0)
-                # пока есть время окна и не заполнен батч — добираем без блокировки
-                while len(jobs) < self.batch_size and loop.time() < end_time:
-                    try:
-                        # чуть-чуть ждём вторую/третью задачу в рамках окна
-                        timeout_left = max(0.0, end_time - loop.time())
-                        job = await asyncio.wait_for(self.queue.get(), timeout=timeout_left)
-                        jobs.append(job)
-                        self._log_qsize_if_changed()
-                    except (asyncio.TimeoutError, asyncio.QueueEmpty):
-                        break
             if len(jobs) > 1:
                 log.info("%d requests will be processed in batch", len(jobs))
             texts = [j["text"] for j in jobs]
 
             try:
                 # один прогон синхронной модели в ThreadPool. Порядок текстов сохраняется
-                results_per_job = await loop.run_in_executor(None, infer_model, texts)
+                results_per_job = await loop.run_in_executor(None, pipe.infer_model, texts)
                 # отдаём результаты во future
                 for (job, ents) in zip(jobs, results_per_job):
                     fut: asyncio.Future = job["future"]

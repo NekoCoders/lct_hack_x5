@@ -76,6 +76,7 @@ if __name__ == "__main__":
     DOCUMENTS_TO_PROCESS = None
     DIFF_EXAMPLES_NUMBER = 50
     USE_TRAIN_TEXTS = True
+    MODEL_IDS_ORDERED = ["lotusbro/x5-ner", "lotusbro/x5-ner-ru", "lotusbro/x5-ner-weighted", "dreyk111/x5-ner-add-brands"]
     MODEL = "nekocoders/x5-ner-final"
 
     if USE_TRAIN_TEXTS:
