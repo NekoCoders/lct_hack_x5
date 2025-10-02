@@ -9,9 +9,13 @@
 pip install -r requirements.txt
 python server/api.py
 ```
-### Запуск через docker
+### Запуск сервера через docker
 ```
 mkdir logs
 sudo chmod -R 777 logs
 docker compose up
 ```
+
+## Использованные датасеты
+- data/openfoodfacts_export.csv
+Источник: https://world.openfoodfacts.org/cgi/search.pl
